@@ -52,7 +52,13 @@ export default function App() {
               />
             </div>
 
-            <PreviewPane conversion={app.conversion} />
+            <PreviewPane
+              file={app.firstFile}
+              crop={app.presetDraft.crop}
+              aspectLockEnabled={app.aspectLockEnabled}
+              onCropChange={app.setCrop}
+              conversion={app.conversion}
+            />
           </div>
         </section>
       </main>

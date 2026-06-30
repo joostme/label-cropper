@@ -369,6 +369,31 @@ button.field-help:focus-visible {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.preview-column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.preview-card {
+  background: #fff;
+  border: 1px solid #c5d0c9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.preview-card-header {
+  border-bottom: 1px solid #d7dfda;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+}
+
+.preview-output-card .preview {
+  border: 0;
+  border-radius: 0;
+}
+
 .error,
 .result {
   border-radius: 6px;
@@ -422,6 +447,88 @@ button.field-help:focus-visible {
   background: rgb(238 241 239 / 72%);
   inset: 0;
   position: absolute;
+}
+
+.source-preview-shell {
+  background: #dfe5e1;
+  padding: 16px;
+}
+
+.source-preview-frame {
+  background: #fff;
+  border: 1px solid #cad4ce;
+  border-radius: 8px;
+  margin: 0 auto;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.source-preview-image {
+  display: block;
+  height: auto;
+  user-select: none;
+  width: 100%;
+}
+
+.source-preview-empty {
+  min-height: 360px;
+}
+
+.crop-box {
+  border: 2px solid #b80f22;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 75%),
+    inset 0 0 0 9999px rgb(184 15 34 / 0.06);
+  cursor: move;
+  position: absolute;
+  touch-action: none;
+}
+
+.crop-box-label {
+  background: #b80f22;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  left: 10px;
+  line-height: 1;
+  padding: 6px 8px;
+  position: absolute;
+  top: 10px;
+}
+
+.crop-handle {
+  background: #fff;
+  border: 2px solid #b80f22;
+  border-radius: 999px;
+  height: 14px;
+  position: absolute;
+  width: 14px;
+}
+
+.crop-handle-nw {
+  cursor: nwse-resize;
+  left: -8px;
+  top: -8px;
+}
+
+.crop-handle-ne {
+  cursor: nesw-resize;
+  right: -8px;
+  top: -8px;
+}
+
+.crop-handle-sw {
+  bottom: -8px;
+  cursor: nesw-resize;
+  left: -8px;
+}
+
+.crop-handle-se {
+  bottom: -8px;
+  cursor: nwse-resize;
+  right: -8px;
 }
 
 .aspect-lock-toggle {
@@ -493,5 +600,9 @@ button.aspect-lock-toggle:focus-visible {
   .preset-actions,
   .preset-editor-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .source-preview-shell {
+    padding: 12px;
   }
 }

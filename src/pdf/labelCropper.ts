@@ -23,8 +23,8 @@ export type ConversionSummary = {
 const POINTS_PER_INCH = 72;
 const LABEL_WIDTH = 4 * POINTS_PER_INCH;
 const LABEL_HEIGHT = 6 * POINTS_PER_INCH;
-const A4_LANDSCAPE_WIDTH = 842;
-const A4_LANDSCAPE_HEIGHT = 595;
+export const NORMALIZED_PAGE_WIDTH = 842;
+export const NORMALIZED_PAGE_HEIGHT = 595;
 
 export const LABEL_PRESETS: LabelPreset[] = [
   {
@@ -116,12 +116,25 @@ function getNormalizedCrop(page: PDFPage, preset: CropPreset): { crop: CropPrese
 
   return {
     isPortrait,
-    crop: {
-      x: (preset.x / A4_LANDSCAPE_WIDTH) * normalizedWidth,
-      y: (preset.y / A4_LANDSCAPE_HEIGHT) * normalizedHeight,
-      width: (preset.width / A4_LANDSCAPE_WIDTH) * normalizedWidth,
-      height: (preset.height / A4_LANDSCAPE_HEIGHT) * normalizedHeight,
-    },
+    crop: scaleCropToPageSize(preset, normalizedWidth, normalizedHeight),
+  };
+}
+
+export function scaleCropToPageSize(preset: CropPreset, pageWidth: number, pageHeight: number): CropPreset {
+  return {
+    x: (preset.x / NORMALIZED_PAGE_WIDTH) * pageWidth,
+    y: (preset.y / NORMALIZED_PAGE_HEIGHT) * pageHeight,
+    width: (preset.width / NORMALIZED_PAGE_WIDTH) * pageWidth,
+    height: (preset.height / NORMALIZED_PAGE_HEIGHT) * pageHeight,
+  };
+}
+
+export function scaleCropFromPageSize(crop: CropPreset, pageWidth: number, pageHeight: number): CropPreset {
+  return {
+    x: (crop.x / pageWidth) * NORMALIZED_PAGE_WIDTH,
+    y: (crop.y / pageHeight) * NORMALIZED_PAGE_HEIGHT,
+    width: (crop.width / pageWidth) * NORMALIZED_PAGE_WIDTH,
+    height: (crop.height / pageHeight) * NORMALIZED_PAGE_HEIGHT,
   };
 }
 

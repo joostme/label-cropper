@@ -18,6 +18,8 @@ import {
   parseFilenameHints,
   presetsMatch,
 } from "../presets/presetUtils";
+import { CropPreset } from "../pdf/labelCropper";
+import { clampCropToBounds } from "../presets/cropBoxMath";
 
 export type ConversionState = {
   pdfUrl: string | null;
@@ -75,6 +77,7 @@ export function useLabelCropperApp() {
 
     return `${files.length}-labels-${new Date().toISOString().slice(0, 10)}-4x6.pdf`;
   }, [files]);
+  const firstFile = files[0] ?? null;
 
   useEffect(() => {
     return () => {
@@ -205,6 +208,15 @@ export function useLabelCropperApp() {
     clearPresetFeedback(setPresetError, setPresetMessage);
   }
 
+  function setCrop(crop: CropPreset) {
+    invalidatePendingConversion(conversionRequestRef);
+    setPresetDraft((current) => ({
+      ...current,
+      crop: clampCropToBounds(crop),
+    }));
+    clearPresetFeedback(setPresetError, setPresetMessage);
+  }
+
   function toggleAspectLock() {
     const nextValue = !aspectLockEnabled;
     setAspectLockEnabled(nextValue);
@@ -307,6 +319,7 @@ export function useLabelCropperApp() {
 
   return {
     files,
+    firstFile,
     fileInputResetKey,
     conversion,
     customPresets,
@@ -324,6 +337,7 @@ export function useLabelCropperApp() {
     updatePresetName,
     updateFilenameHints,
     updateCrop,
+    setCrop,
     toggleAspectLock,
     savePreset,
     deletePreset,
