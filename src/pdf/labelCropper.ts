@@ -1,0 +1,158 @@
+import { degrees, PDFDocument, PDFPage } from "pdf-lib";
+
+export type CropPreset = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type LabelPreset = {
+  id: string;
+  name: string;
+  filenameHints?: string[];
+  crop: CropPreset;
+};
+
+export type ConversionSummary = {
+  pages: number;
+  rotatedPages: number;
+  outputBytes: Uint8Array;
+};
+
+const POINTS_PER_INCH = 72;
+const LABEL_WIDTH = 4 * POINTS_PER_INCH;
+const LABEL_HEIGHT = 6 * POINTS_PER_INCH;
+const A4_LANDSCAPE_WIDTH = 842;
+const A4_LANDSCAPE_HEIGHT = 595;
+
+export const LABEL_PRESETS: LabelPreset[] = [
+  {
+    id: "dhl-germany-a4",
+    name: "DHL Label Germany A4",
+    crop: {
+      x: 432,
+      y: 45,
+      width: 336,
+      height: 504,
+    },
+  },
+  {
+    id: "ebay-dhl-germany-a4",
+    name: "eBay DHL Germany A4",
+    filenameHints: ["ebay"],
+    crop: {
+      x: 430,
+      y: 30,
+      width: 367,
+      height: 550,
+    },
+  },
+];
+
+export const DEFAULT_LABEL_PRESET = LABEL_PRESETS[0];
+
+export function findLabelPresetForFiles(files: File[], fallback = DEFAULT_LABEL_PRESET): LabelPreset {
+  const fileNames = files.map((file) => file.name.toLowerCase());
+
+  return (
+    LABEL_PRESETS.find((preset) =>
+      preset.filenameHints?.some((hint) => fileNames.some((fileName) => fileName.includes(hint.toLowerCase()))),
+    ) ?? fallback
+  );
+}
+
+type PageBox = {
+  left: number;
+  bottom: number;
+  right: number;
+  top: number;
+};
+
+export async function convertLabels(files: File[], labelPreset: LabelPreset): Promise<ConversionSummary> {
+  const outputPdf = await PDFDocument.create();
+  let pages = 0;
+  let rotatedPages = 0;
+
+  for (const file of files) {
+    const bytes = await file.arrayBuffer();
+    const inputPdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
+
+    for (const inputPage of inputPdf.getPages()) {
+      const { crop, isPortrait } = getNormalizedCrop(inputPage, labelPreset.crop);
+      const sourceBox = isPortrait ? normalizedLandscapeToPortraitBox(crop, inputPage) : cropToPageBox(crop);
+      const embeddedPage = await outputPdf.embedPage(inputPage, sourceBox);
+      const outputPage = outputPdf.addPage([LABEL_WIDTH, LABEL_HEIGHT]);
+
+      if (isPortrait) {
+        outputPage.drawPage(embeddedPage, {
+          x: 0,
+          y: LABEL_HEIGHT,
+          width: LABEL_HEIGHT,
+          height: LABEL_WIDTH,
+          rotate: degrees(-90),
+        });
+        rotatedPages += 1;
+      } else {
+        outputPage.drawPage(embeddedPage, {
+          x: 0,
+          y: 0,
+          width: LABEL_WIDTH,
+          height: LABEL_HEIGHT,
+        });
+      }
+
+      pages += 1;
+    }
+  }
+
+  return {
+    pages,
+    rotatedPages,
+    outputBytes: await outputPdf.save(),
+  };
+}
+
+function getNormalizedCrop(page: PDFPage, preset: CropPreset): { crop: CropPreset; isPortrait: boolean } {
+  const width = page.getWidth();
+  const height = page.getHeight();
+  const isPortrait = width < height;
+  const normalizedWidth = isPortrait ? height : width;
+  const normalizedHeight = isPortrait ? width : height;
+
+  return {
+    isPortrait,
+    crop: {
+      x: (preset.x / A4_LANDSCAPE_WIDTH) * normalizedWidth,
+      y: (preset.y / A4_LANDSCAPE_HEIGHT) * normalizedHeight,
+      width: (preset.width / A4_LANDSCAPE_WIDTH) * normalizedWidth,
+      height: (preset.height / A4_LANDSCAPE_HEIGHT) * normalizedHeight,
+    },
+  };
+}
+
+function cropToPageBox(crop: CropPreset): PageBox {
+  return {
+    left: crop.x,
+    bottom: crop.y,
+    right: crop.x + crop.width,
+    top: crop.y + crop.height,
+  };
+}
+
+function normalizedLandscapeToPortraitBox(crop: CropPreset, page: PDFPage): PageBox {
+  const pageWidth = page.getWidth();
+
+  return {
+    left: pageWidth - (crop.y + crop.height),
+    bottom: crop.x,
+    right: pageWidth - crop.y,
+    top: crop.x + crop.width,
+  };
+}
+
+export function makePdfBlobUrl(bytes: Uint8Array): string {
+  const blobBytes = new Uint8Array(bytes.byteLength);
+  blobBytes.set(bytes);
+  return URL.createObjectURL(new Blob([blobBytes], { type: "application/pdf" }));
+}
