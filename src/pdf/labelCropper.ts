@@ -28,16 +28,6 @@ const A4_LANDSCAPE_HEIGHT = 595;
 
 export const LABEL_PRESETS: LabelPreset[] = [
   {
-    id: "dhl-germany-a4",
-    name: "DHL Label Germany A4",
-    crop: {
-      x: 432,
-      y: 45,
-      width: 336,
-      height: 504,
-    },
-  },
-  {
     id: "ebay-dhl-germany-a4",
     name: "eBay DHL Germany A4",
     filenameHints: ["ebay"],
@@ -52,11 +42,15 @@ export const LABEL_PRESETS: LabelPreset[] = [
 
 export const DEFAULT_LABEL_PRESET = LABEL_PRESETS[0];
 
-export function findLabelPresetForFiles(files: File[], fallback = DEFAULT_LABEL_PRESET): LabelPreset {
+export function findLabelPresetForFiles(
+  files: File[],
+  presets: LabelPreset[] = LABEL_PRESETS,
+  fallback = DEFAULT_LABEL_PRESET,
+): LabelPreset {
   const fileNames = files.map((file) => file.name.toLowerCase());
 
   return (
-    LABEL_PRESETS.find((preset) =>
+    presets.find((preset) =>
       preset.filenameHints?.some((hint) => fileNames.some((fileName) => fileName.includes(hint.toLowerCase()))),
     ) ?? fallback
   );
