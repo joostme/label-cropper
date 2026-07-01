@@ -145,7 +145,7 @@ export function InteractiveCropPreview({ file, crop, aspectLockEnabled, onCropCh
   return (
     <section className="preview-card">
       <div className="preview-card-header">
-        <div className="panel-title">Adjust crop box</div>
+        <div className="panel-title">Source Preview</div>
       </div>
 
       {!file && <div className="empty-preview source-preview-empty">Upload a PDF to place the crop box.</div>}

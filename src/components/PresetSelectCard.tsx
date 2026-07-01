@@ -27,7 +27,7 @@ export function PresetSelectCard({
       <div className="panel-header">
         <div className="panel-title">
           <ListFilter aria-hidden="true" size={18} />
-          Preset
+          Preset Selection
         </div>
       </div>
       <label className="preset-select">

@@ -9,7 +9,7 @@ type PreviewPaneProps = {
 
 export function PreviewPane({
   conversion,
-  title = "Output",
+  title = "Output Preview",
   emptyLabel = "4 x 6 PDF preview",
   compact = false,
 }: PreviewPaneProps) {

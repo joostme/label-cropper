@@ -82,7 +82,7 @@ export function PresetManagerModal({
               inputResetKey={inputResetKey}
               onFilesSelected={onFilesSelected}
               compact
-              title={file ? "Replace preview PDF" : "Upload preview PDF"}
+              title={file ? "Replace Preview PDF" : "Upload Preview PDF"}
               subtitle={file ? file.name : "Drop a PDF here or choose one to preview this preset."}
             />
             <InteractiveCropPreview file={file} crop={presetDraft.crop} aspectLockEnabled={aspectLockEnabled} onCropChange={onVisualCropChange} />
@@ -100,13 +100,13 @@ export function PresetManagerModal({
               onToggleAspectLock={onToggleAspectLock}
               onSavePreset={onSavePreset}
               onSecondaryAction={onClose}
-              title="Preset settings"
+              title="Preset Settings"
               primaryActionLabel={primaryActionLabel}
               secondaryActionLabel="Cancel"
             />
             <PreviewPane
               conversion={draftConversion}
-              title="Draft output preview"
+              title="Draft Output Preview"
               emptyLabel="Upload a PDF to preview the draft output."
               compact
             />

@@ -1,5 +1,5 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { ScanLine } from "lucide-react";
+import { GitFork, ScanLine } from "lucide-react";
 import { OutputPanel } from "./components/OutputPanel";
 import { PresetManagerModal } from "./components/PresetManagerModal";
 import { PresetSelectCard } from "./components/PresetSelectCard";
@@ -28,7 +28,6 @@ export default function App() {
               </div>
               <div>
                 <h1>Croppy x64</h1>
-                <p className="eyebrow">Turn any PDF into a print-ready 4 x 6 label for your thermal printer. Auto-rotates pages and applies custom presets.</p>
               </div>
             </div>
           </header>
@@ -68,6 +67,13 @@ export default function App() {
 
             <PreviewPane conversion={app.conversion} />
           </section>
+
+          <footer className="app-footer">
+            <a href="https://github.com/joostme/label-cropper" target="_blank" rel="noreferrer">
+              <GitFork aria-hidden="true" size={16} />
+              View the project on GitHub
+            </a>
+          </footer>
         </section>
 
         <PresetManagerModal

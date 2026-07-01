@@ -10,7 +10,7 @@ export function UploadedFilesCard({ files }: UploadedFilesCardProps) {
   return (
     <section className="panel panel-compact">
       <div className="panel-header">
-        <div className="panel-title">Uploaded files</div>
+        <div className="panel-title">Uploaded PDFs</div>
         <p className="panel-note panel-note-tight">These files will be combined with the selected preset.</p>
       </div>
 

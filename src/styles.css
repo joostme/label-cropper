@@ -96,15 +96,6 @@ button.secondary:hover:not(:disabled) {
   width: 56px;
 }
 
-.eyebrow {
-  color: #65756c;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  margin: 6px 0 6px;
-  text-transform: uppercase;
-}
-
 h1 {
   font-size: clamp(2rem, 4vw, 3.4rem);
   letter-spacing: 0;
@@ -124,6 +115,29 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 26px;
+  padding-bottom: 6px;
+}
+
+.app-footer a {
+  align-items: center;
+  color: #5a6a61;
+  display: inline-flex;
+  font-size: 0.92rem;
+  gap: 8px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration-color: #b8c4bc;
+  text-underline-offset: 3px;
+}
+
+.app-footer a:hover {
+  color: #253329;
 }
 
 .drop-zone {
