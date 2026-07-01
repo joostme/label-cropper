@@ -104,6 +104,14 @@ h1 {
   max-width: 11ch;
 }
 
+.hero-note {
+  color: #526159;
+  font-size: 0.97rem;
+  line-height: 1.45;
+  margin: 10px 0 0;
+  max-width: 44ch;
+}
+
 .happy-path-grid {
   display: grid;
   gap: 24px;

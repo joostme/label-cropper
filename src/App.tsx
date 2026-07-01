@@ -1,4 +1,5 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { useEffect, useEffectEvent } from "react";
 import { GitFork, ScanLine } from "lucide-react";
 import { OutputPanel } from "./components/OutputPanel";
 import { PresetManagerModal } from "./components/PresetManagerModal";
@@ -7,6 +8,7 @@ import { PreviewPane } from "./components/PreviewPane";
 import { UploadPanel } from "./components/UploadPanel";
 import { UploadedFilesCard } from "./components/UploadedFilesCard";
 import { useLabelCropperApp } from "./hooks/useLabelCropperApp";
+import { registerPdfLaunchConsumer } from "./pwa/fileHandling";
 import { usePresetEditorModal } from "./hooks/usePresetEditorModal";
 
 export default function App() {
@@ -16,6 +18,15 @@ export default function App() {
     isCustomPresetSelected: app.isCustomPresetSelected,
     onSavePreset: app.savePresetDefinition,
   });
+  const handleLaunchedFiles = useEffectEvent((files: File[]) => {
+    app.applyFiles(files);
+  });
+
+  useEffect(() => {
+    return registerPdfLaunchConsumer((files) => {
+      handleLaunchedFiles(files);
+    });
+  }, [handleLaunchedFiles]);
 
   return (
     <Tooltip.Provider delayDuration={150}>
@@ -28,6 +39,7 @@ export default function App() {
               </div>
               <div>
                 <h1>Croppy x64</h1>
+                <p className="hero-note">Install the app in Chrome or Edge to open shipping-label PDFs directly with Croppy.</p>
               </div>
             </div>
           </header>
