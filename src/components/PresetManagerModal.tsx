@@ -107,7 +107,6 @@ export function PresetManagerModal({
             <PreviewPane
               conversion={draftConversion}
               title="Draft output preview"
-              description="This shows the actual 4 x 6 result for the current preset draft."
               emptyLabel="Upload a PDF to preview the draft output."
               compact
             />

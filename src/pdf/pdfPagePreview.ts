@@ -37,6 +37,7 @@ export async function renderFirstPdfPagePreview(file: File): Promise<PdfPagePrev
     canvas.height = Math.ceil(viewport.height);
 
     await page.render({
+      canvas,
       canvasContext: context,
       viewport,
     }).promise;

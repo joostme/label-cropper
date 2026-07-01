@@ -37,38 +37,35 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
   }, [mode]);
 
   function openCreate() {
-    setMode("create");
-    setSourcePresetId(null);
-    setAspectLockEnabled(true);
-    setDraft({
-      ...alignPresetToLabelAspect(selectedPreset),
-      id: "",
-      name: "",
-    });
-    setError(null);
-    setOpen(true);
+    openWithDraft(
+      "create",
+      {
+        ...alignPresetToLabelAspect(selectedPreset),
+        id: "",
+        name: "",
+      },
+      null,
+    );
   }
 
   function openDuplicate() {
-    setMode("duplicate");
-    setSourcePresetId(null);
-    setAspectLockEnabled(true);
-    setDraft({
-      ...alignPresetToLabelAspect(selectedPreset),
-      id: "",
-      name: `${selectedPreset.name} Copy`,
-    });
-    setError(null);
-    setOpen(true);
+    openWithDraft(
+      "duplicate",
+      {
+        ...alignPresetToLabelAspect(selectedPreset),
+        id: "",
+        name: `${selectedPreset.name} Copy`,
+      },
+      null,
+    );
   }
 
   function openEdit() {
-    setMode(isCustomPresetSelected ? "edit" : "edit-template");
-    setSourcePresetId(isCustomPresetSelected ? selectedPreset.id : null);
-    setAspectLockEnabled(true);
-    setDraft(alignPresetToLabelAspect(selectedPreset));
-    setError(null);
-    setOpen(true);
+    openWithDraft(
+      isCustomPresetSelected ? "edit" : "edit-template",
+      alignPresetToLabelAspect(selectedPreset),
+      isCustomPresetSelected ? selectedPreset.id : null,
+    );
   }
 
   function close() {
@@ -77,16 +74,14 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
   }
 
   function updatePresetName(name: string) {
-    setDraft((current) => ({ ...current, name }));
-    setError(null);
+    updateDraft((current) => ({ ...current, name }));
   }
 
   function updateFilenameHints(value: string) {
-    setDraft((current) => ({
+    updateDraft((current) => ({
       ...current,
       filenameHints: parseFilenameHints(value),
     }));
-    setError(null);
   }
 
   function updateCrop(field: CropField, value: number) {
@@ -102,7 +97,7 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
       return;
     }
 
-    setDraft((current) => {
+    updateDraft((current) => {
       const nextDraft = {
         ...current,
         crop: {
@@ -115,15 +110,13 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
         ? alignPresetToLabelAspect(nextDraft, field)
         : nextDraft;
     });
-    setError(null);
   }
 
   function setCrop(crop: LabelPreset["crop"]) {
-    setDraft((current) => ({
+    updateDraft((current) => ({
       ...current,
       crop: clampCropToBounds(crop),
     }));
-    setError(null);
   }
 
   function toggleAspectLock() {
@@ -181,4 +174,18 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
     toggleAspectLock,
     save,
   };
+
+  function openWithDraft(nextMode: PresetEditorMode, nextDraft: LabelPreset, nextSourcePresetId: string | null) {
+    setMode(nextMode);
+    setSourcePresetId(nextSourcePresetId);
+    setAspectLockEnabled(true);
+    setDraft(nextDraft);
+    setError(null);
+    setOpen(true);
+  }
+
+  function updateDraft(updater: (current: LabelPreset) => LabelPreset) {
+    setDraft(updater);
+    setError(null);
+  }
 }

@@ -6,10 +6,9 @@ import {
   LABEL_PRESETS,
   makePdfBlobUrl,
 } from "../pdf/labelCropper";
-import { ConversionState, useLabelConversion } from "./useLabelConversion";
+import { useLabelConversion } from "./useLabelConversion";
 import { loadCustomLabelPresets, saveCustomLabelPresets } from "../presetStorage";
-import { createPresetId } from "../presets/presetUtils";
-import { clonePreset } from "../presets/presetUtils";
+import { clonePreset, createPresetId } from "../presets/presetUtils";
 
 export function useLabelCropperApp() {
   const [files, setFiles] = useState<File[]>([]);

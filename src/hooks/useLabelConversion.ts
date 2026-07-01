@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
 import { convertLabels, LabelPreset, makePdfBlobUrl } from "../pdf/labelCropper";
 
 export type ConversionState = {
@@ -33,13 +32,14 @@ export function useLabelConversion(files: File[], preset: LabelPreset) {
   }, [conversion.pdfUrl]);
 
   useEffect(() => {
+    const requestId = conversionRequestRef.current + 1;
+    conversionRequestRef.current = requestId;
+
     if (files.length === 0) {
-      invalidatePendingConversion(conversionRequestRef);
       setConversion(initialConversionState);
       return;
     }
 
-    const requestId = conversionRequestRef.current;
     setConversion((current) => ({ ...current, busy: true, error: null }));
 
     const timeoutId = window.setTimeout(() => {
@@ -78,8 +78,4 @@ export function useLabelConversion(files: File[], preset: LabelPreset) {
   }, [files, preset]);
 
   return conversion;
-}
-
-function invalidatePendingConversion(conversionRequestRef: MutableRefObject<number>) {
-  conversionRequestRef.current += 1;
 }

@@ -3,7 +3,6 @@ import { ConversionState } from "../hooks/useLabelConversion";
 type PreviewPaneProps = {
   conversion: ConversionState;
   title?: string;
-  description?: string;
   emptyLabel?: string;
   compact?: boolean;
 };

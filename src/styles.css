@@ -113,26 +113,6 @@ h1 {
   max-width: 11ch;
 }
 
-.status-pill {
-  align-items: center;
-  background: #fff;
-  border: 1px solid #cdd7d0;
-  border-radius: 999px;
-  color: #34463a;
-  display: inline-flex;
-  flex: 0 0 auto;
-  font-size: 0.92rem;
-  font-weight: 700;
-  gap: 8px;
-  padding: 10px 14px;
-}
-
-.tool-grid {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: minmax(280px, 380px) minmax(320px, 1fr);
-}
-
 .happy-path-grid {
   display: grid;
   gap: 24px;
@@ -253,14 +233,6 @@ h1 {
 
 .panel-header .panel-title {
   margin-bottom: 0;
-}
-
-.panel-kicker {
-  color: #9b5f14;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .preset-select {
@@ -417,12 +389,6 @@ button.field-help:focus-visible {
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.preview-column {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
 }
 
 .preview-card {
@@ -708,7 +674,6 @@ button.aspect-lock-toggle:focus-visible {
 }
 
 @media (max-width: 920px) {
-  .tool-grid,
   .happy-path-grid {
     grid-template-columns: minmax(0, 1fr);
   }

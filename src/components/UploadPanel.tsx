@@ -31,6 +31,13 @@ export function UploadPanel({
     }
   }
 
+  function handleSelectedFiles(fileList: FileList | null) {
+    const nextFiles = collectPdfFiles(fileList);
+    if (nextFiles.length > 0) {
+      onFilesSelected(nextFiles);
+    }
+  }
+
   return (
     <div
       className={`drop-zone ${compact ? "drop-zone-compact" : ""} ${isDragging ? "is-dragging" : ""}`}
@@ -42,10 +49,7 @@ export function UploadPanel({
       onDrop={(event) => {
         event.preventDefault();
         setDragging(false);
-        const nextFiles = collectPdfFiles(event.dataTransfer.files);
-        if (nextFiles.length > 0) {
-          onFilesSelected(nextFiles);
-        }
+        handleSelectedFiles(event.dataTransfer.files);
       }}
       onClick={openFilePicker}
       onKeyDown={handleKeyDown}
@@ -59,10 +63,7 @@ export function UploadPanel({
         accept="application/pdf"
         multiple
         onChange={(event) => {
-          const nextFiles = collectPdfFiles(event.currentTarget.files);
-          if (nextFiles.length > 0) {
-            onFilesSelected(nextFiles);
-          }
+          handleSelectedFiles(event.currentTarget.files);
           event.currentTarget.value = "";
         }}
       />
