@@ -110,13 +110,21 @@ export async function convertLabels(files: File[], labelPreset: LabelPreset): Pr
 function getNormalizedCrop(page: PDFPage, preset: CropPreset): { crop: CropPreset; isPortrait: boolean } {
   const width = page.getWidth();
   const height = page.getHeight();
-  const isPortrait = width < height;
-  const normalizedWidth = isPortrait ? height : width;
-  const normalizedHeight = isPortrait ? width : height;
+  const { isPortrait, normalizedWidth, normalizedHeight } = getNormalizedPageSize(width, height);
 
   return {
     isPortrait,
     crop: scaleCropToPageSize(preset, normalizedWidth, normalizedHeight),
+  };
+}
+
+export function getNormalizedPageSize(pageWidth: number, pageHeight: number) {
+  const isPortrait = pageWidth < pageHeight;
+
+  return {
+    isPortrait,
+    normalizedWidth: isPortrait ? pageHeight : pageWidth,
+    normalizedHeight: isPortrait ? pageWidth : pageHeight,
   };
 }
 
@@ -150,11 +158,47 @@ function cropToPageBox(crop: CropPreset): PageBox {
 function normalizedLandscapeToPortraitBox(crop: CropPreset, page: PDFPage): PageBox {
   const pageWidth = page.getWidth();
 
+  return normalizedLandscapeToPortraitPageBox(crop, pageWidth);
+}
+
+export function presetCropToPageBox(presetCrop: CropPreset, pageWidth: number, pageHeight: number): PageBox {
+  const { isPortrait, normalizedWidth, normalizedHeight } = getNormalizedPageSize(pageWidth, pageHeight);
+  const crop = scaleCropToPageSize(presetCrop, normalizedWidth, normalizedHeight);
+
+  return isPortrait ? normalizedLandscapeToPortraitPageBox(crop, pageWidth) : cropToPageBox(crop);
+}
+
+export function pageBoxToPresetCrop(pageBox: PageBox, pageWidth: number, pageHeight: number): CropPreset {
+  const { isPortrait, normalizedWidth, normalizedHeight } = getNormalizedPageSize(pageWidth, pageHeight);
+  const crop = isPortrait ? portraitPageBoxToNormalizedLandscapeCrop(pageBox, pageWidth) : pageBoxToCrop(pageBox);
+
+  return scaleCropFromPageSize(crop, normalizedWidth, normalizedHeight);
+}
+
+function normalizedLandscapeToPortraitPageBox(crop: CropPreset, pageWidth: number): PageBox {
   return {
     left: pageWidth - (crop.y + crop.height),
     bottom: crop.x,
     right: pageWidth - crop.y,
     top: crop.x + crop.width,
+  };
+}
+
+function portraitPageBoxToNormalizedLandscapeCrop(pageBox: PageBox, pageWidth: number): CropPreset {
+  return {
+    x: pageBox.bottom,
+    y: pageWidth - pageBox.right,
+    width: pageBox.top - pageBox.bottom,
+    height: pageBox.right - pageBox.left,
+  };
+}
+
+function pageBoxToCrop(pageBox: PageBox): CropPreset {
+  return {
+    x: pageBox.left,
+    y: pageBox.bottom,
+    width: pageBox.right - pageBox.left,
+    height: pageBox.top - pageBox.bottom,
   };
 }
 

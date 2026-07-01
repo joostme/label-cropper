@@ -1,5 +1,5 @@
 import { Download, Printer, Trash2 } from "lucide-react";
-import { ConversionState } from "../hooks/useLabelCropperApp";
+import { ConversionState } from "../hooks/useLabelConversion";
 
 type OutputPanelProps = {
   conversion: ConversionState;
@@ -29,12 +29,6 @@ export function OutputPanel({ conversion, filesCount, hasResult, onReset, onDown
       </div>
 
       {conversion.error && <p className="error">{conversion.error}</p>}
-      {hasResult && (
-        <p className="result">
-          {filesCount} file{filesCount === 1 ? "" : "s"} combined into {conversion.pages} output page
-          {conversion.pages === 1 ? "" : "s"}. {conversion.rotatedPages} page{conversion.rotatedPages === 1 ? "" : "s"} rotated.
-        </p>
-      )}
     </>
   );
 }

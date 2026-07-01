@@ -8,15 +8,16 @@ type PresetEditorCardProps = {
   presetHintValue: string;
   canSavePreset: boolean;
   aspectLockEnabled: boolean;
-  isCustomPresetSelected: boolean;
   presetError: string | null;
-  presetMessage: string | null;
   onPresetNameChange: (name: string) => void;
   onFilenameHintsChange: (value: string) => void;
   onCropChange: (field: CropField, value: number) => void;
   onToggleAspectLock: () => void;
   onSavePreset: () => void;
-  onDeletePreset: () => void;
+  onSecondaryAction?: () => void;
+  title?: string;
+  primaryActionLabel?: string;
+  secondaryActionLabel?: string;
 };
 
 const cropFields: Array<{ field: CropField; label: string; min: number }> = [
@@ -31,25 +32,21 @@ export function PresetEditorCard({
   presetHintValue,
   canSavePreset,
   aspectLockEnabled,
-  isCustomPresetSelected,
   presetError,
-  presetMessage,
   onPresetNameChange,
   onFilenameHintsChange,
   onCropChange,
   onToggleAspectLock,
   onSavePreset,
-  onDeletePreset,
+  onSecondaryAction,
+  title = "Create or edit a preset",
+  primaryActionLabel = "Save preset",
+  secondaryActionLabel = "Cancel",
 }: PresetEditorCardProps) {
   return (
     <div className="panel panel-editor">
       <div className="panel-header">
-        <div className="panel-kicker">Preset builder</div>
-        <div className="panel-title">Create or edit a preset</div>
-        <p className="panel-note">
-          Built-in presets are read-only. Change the values here, watch the preview update, then save a local preset for this
-          device.
-        </p>
+        <div className="panel-title">{title}</div>
       </div>
 
       <div className="preset-editor-grid">
@@ -130,16 +127,15 @@ export function PresetEditorCard({
       </div>
 
       <div className="preset-actions">
-        <button type="button" className="secondary" onClick={onSavePreset} disabled={!canSavePreset}>
-          {isCustomPresetSelected ? "Update preset" : "Save as new preset"}
+        <button type="button" className="secondary" onClick={onSecondaryAction}>
+          {secondaryActionLabel}
         </button>
-        <button type="button" className="secondary" onClick={onDeletePreset} disabled={!isCustomPresetSelected}>
-          Delete saved preset
+        <button type="button" onClick={onSavePreset} disabled={!canSavePreset}>
+          {primaryActionLabel}
         </button>
       </div>
 
       {presetError && <p className="error">{presetError}</p>}
-      {!presetError && presetMessage && <p className="result">{presetMessage}</p>}
     </div>
   );
 }

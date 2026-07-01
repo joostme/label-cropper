@@ -11,6 +11,7 @@ export type PdfPagePreview = {
   imageHeight: number;
   pageWidth: number;
   pageHeight: number;
+  viewportTransform: [number, number, number, number, number, number];
 };
 
 export async function renderFirstPdfPagePreview(file: File): Promise<PdfPagePreview> {
@@ -46,8 +47,9 @@ export async function renderFirstPdfPagePreview(file: File): Promise<PdfPagePrev
       imageUrl,
       imageWidth: canvas.width,
       imageHeight: canvas.height,
-      pageWidth: normalizedViewport.width,
-      pageHeight: normalizedViewport.height,
+      pageWidth: baseViewport.width,
+      pageHeight: baseViewport.height,
+      viewportTransform: viewport.transform as [number, number, number, number, number, number],
     };
   } finally {
     await pdfDocument.cleanup();

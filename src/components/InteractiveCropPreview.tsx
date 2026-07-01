@@ -71,7 +71,16 @@ export function InteractiveCropPreview({ file, crop, aspectLockEnabled, onCropCh
       return null;
     }
 
-    return cropPresetToDisplayRect(crop, preview.pageWidth, preview.pageHeight, displaySize.width, displaySize.height);
+    return cropPresetToDisplayRect(
+      crop,
+      preview.pageWidth,
+      preview.pageHeight,
+      preview.viewportTransform,
+      preview.imageWidth,
+      preview.imageHeight,
+      displaySize.width,
+      displaySize.height,
+    );
   }, [crop, displaySize.height, displaySize.width, preview]);
 
   useEffect(() => {
@@ -88,7 +97,18 @@ export function InteractiveCropPreview({ file, crop, aspectLockEnabled, onCropCh
           ? moveDisplayRect(interaction.startRect, deltaX, deltaY, displaySize)
           : resizeDisplayRect(interaction.startRect, interaction.handle, deltaX, deltaY, displaySize, aspectLockEnabled);
 
-      onCropChange(displayRectToCropPreset(nextRect, preview.pageWidth, preview.pageHeight, displaySize.width, displaySize.height));
+      onCropChange(
+        displayRectToCropPreset(
+          nextRect,
+          preview.pageWidth,
+          preview.pageHeight,
+          preview.viewportTransform,
+          preview.imageWidth,
+          preview.imageHeight,
+          displaySize.width,
+          displaySize.height,
+        ),
+      );
     }
 
     function handlePointerUp() {
@@ -125,8 +145,7 @@ export function InteractiveCropPreview({ file, crop, aspectLockEnabled, onCropCh
   return (
     <section className="preview-card">
       <div className="preview-card-header">
-        <div className="panel-title">Adjust crop on source label</div>
-        <p className="panel-note panel-note-tight">Drag the box to move it. Drag the corner handles to resize it. If multiple PDFs are loaded, the first file is shown here.</p>
+        <div className="panel-title">Adjust crop box</div>
       </div>
 
       {!file && <div className="empty-preview source-preview-empty">Upload a PDF to place the crop box.</div>}

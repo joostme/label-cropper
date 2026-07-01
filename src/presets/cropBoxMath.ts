@@ -1,4 +1,4 @@
-import { CropPreset, NORMALIZED_PAGE_HEIGHT, NORMALIZED_PAGE_WIDTH, scaleCropFromPageSize, scaleCropToPageSize } from "../pdf/labelCropper";
+import { CropPreset, pageBoxToPresetCrop, presetCropToPageBox } from "../pdf/labelCropper";
 
 export type CropBoxHandle = "move" | "nw" | "ne" | "sw" | "se";
 
@@ -14,23 +14,40 @@ type Bounds = {
   height: number;
 };
 
+type ViewportTransform = [number, number, number, number, number, number];
+
 const LABEL_ASPECT_RATIO = 4 / 6;
 const MIN_CROP_SIZE = 24;
+
+export function clampCropToBounds(crop: CropPreset): CropPreset {
+  return {
+    x: Math.round(crop.x),
+    y: Math.round(crop.y),
+    width: Math.max(1, Math.round(crop.width)),
+    height: Math.max(1, Math.round(crop.height)),
+  };
+}
 
 export function cropPresetToDisplayRect(
   crop: CropPreset,
   pageWidth: number,
   pageHeight: number,
+  viewportTransform: ViewportTransform,
+  imageWidth: number,
+  imageHeight: number,
   displayWidth: number,
   displayHeight: number,
 ): CropRect {
-  const pageCrop = scaleCropToPageSize(crop, pageWidth, pageHeight);
+  const pageBox = presetCropToPageBox(crop, pageWidth, pageHeight);
+  const topLeft = applyTransform(pageBox.left, pageBox.top, viewportTransform);
+  const bottomRight = applyTransform(pageBox.right, pageBox.bottom, viewportTransform);
+  const imageRect = normalizeRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
 
   return {
-    x: (pageCrop.x / pageWidth) * displayWidth,
-    y: ((pageHeight - (pageCrop.y + pageCrop.height)) / pageHeight) * displayHeight,
-    width: (pageCrop.width / pageWidth) * displayWidth,
-    height: (pageCrop.height / pageHeight) * displayHeight,
+    x: (imageRect.x / imageWidth) * displayWidth,
+    y: (imageRect.y / imageHeight) * displayHeight,
+    width: (imageRect.width / imageWidth) * displayWidth,
+    height: (imageRect.height / imageHeight) * displayHeight,
   };
 }
 
@@ -38,20 +55,31 @@ export function displayRectToCropPreset(
   rect: CropRect,
   pageWidth: number,
   pageHeight: number,
+  viewportTransform: ViewportTransform,
+  imageWidth: number,
+  imageHeight: number,
   displayWidth: number,
   displayHeight: number,
 ): CropPreset {
-  return clampCropToBounds(
-    scaleCropFromPageSize(
-      {
-        x: (rect.x / displayWidth) * pageWidth,
-        y: pageHeight - (((rect.y + rect.height) / displayHeight) * pageHeight),
-        width: (rect.width / displayWidth) * pageWidth,
-        height: (rect.height / displayHeight) * pageHeight,
-      },
-      pageWidth,
-      pageHeight,
-    ),
+  const imageRect = {
+    x: (rect.x / displayWidth) * imageWidth,
+    y: (rect.y / displayHeight) * imageHeight,
+    width: (rect.width / displayWidth) * imageWidth,
+    height: (rect.height / displayHeight) * imageHeight,
+  };
+  const inverseTransform = invertTransform(viewportTransform);
+  const topLeft = applyTransform(imageRect.x, imageRect.y, inverseTransform);
+  const bottomRight = applyTransform(imageRect.x + imageRect.width, imageRect.y + imageRect.height, inverseTransform);
+
+  return pageBoxToPresetCrop(
+    {
+      left: Math.min(topLeft.x, bottomRight.x),
+      bottom: Math.min(topLeft.y, bottomRight.y),
+      right: Math.max(topLeft.x, bottomRight.x),
+      top: Math.max(topLeft.y, bottomRight.y),
+    },
+    pageWidth,
+    pageHeight,
   );
 }
 
@@ -117,18 +145,6 @@ export function resizeDisplayRect(
   };
 }
 
-export function clampCropToBounds(crop: CropPreset): CropPreset {
-  const width = clamp(Math.round(crop.width), 1, NORMALIZED_PAGE_WIDTH);
-  const height = clamp(Math.round(crop.height), 1, NORMALIZED_PAGE_HEIGHT);
-
-  return {
-    x: clamp(Math.round(crop.x), 0, NORMALIZED_PAGE_WIDTH - width),
-    y: clamp(Math.round(crop.y), 0, NORMALIZED_PAGE_HEIGHT - height),
-    width,
-    height,
-  };
-}
-
 function lockRectAspect(
   rect: CropRect,
   handle: Exclude<CropBoxHandle, "move">,
@@ -174,6 +190,35 @@ function lockRectAspect(
     y: clamp(y, 0, bounds.height - height),
     width,
     height,
+  };
+}
+
+function applyTransform(x: number, y: number, [a, b, c, d, e, f]: ViewportTransform) {
+  return {
+    x: a * x + c * y + e,
+    y: b * x + d * y + f,
+  };
+}
+
+function invertTransform([a, b, c, d, e, f]: ViewportTransform): ViewportTransform {
+  const determinant = a * d - b * c;
+
+  return [
+    d / determinant,
+    -b / determinant,
+    -c / determinant,
+    a / determinant,
+    (c * f - d * e) / determinant,
+    (b * e - a * f) / determinant,
+  ];
+}
+
+function normalizeRect(x1: number, y1: number, x2: number, y2: number): CropRect {
+  return {
+    x: Math.min(x1, x2),
+    y: Math.min(y1, y2),
+    width: Math.abs(x2 - x1),
+    height: Math.abs(y2 - y1),
   };
 }
 
