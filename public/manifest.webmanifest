@@ -1,7 +1,7 @@
 {
-  "name": "Croppy x64",
+  "name": "Croppy",
   "short_name": "Croppy",
-  "description": "Crop shipping label PDFs into print-ready 4x6 format for thermal printers.",
+  "description": "PDF label cropper for cleaning up shipping label PDFs.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

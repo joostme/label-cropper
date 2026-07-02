@@ -39,8 +39,8 @@ export default function App() {
                 <ScanLine size={28} strokeWidth={2.1} />
               </div>
               <div>
-                <h1>Croppy x64</h1>
-                <p className="hero-note">Install the app in Chrome or Edge to open shipping-label PDFs directly with Croppy.</p>
+                <h1>Croppy</h1>
+                <p className="hero-note">PDF label cropper for cleaning up shipping-label PDFs with custom output sizes and a global metric or US inches switch.</p>
               </div>
             </div>
           </header>
