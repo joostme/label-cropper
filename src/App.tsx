@@ -1,6 +1,7 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { useEffect, useEffectEvent } from "react";
 import { GitFork, ScanLine } from "lucide-react";
+import { formatOutputSize } from "./pdf/labelCropper";
 import { OutputPanel } from "./components/OutputPanel";
 import { PresetManagerModal } from "./components/PresetManagerModal";
 import { PresetSelectCard } from "./components/PresetSelectCard";
@@ -71,13 +72,14 @@ export default function App() {
                 conversion={app.conversion}
                 filesCount={app.files.length}
                 hasResult={app.hasResult}
+                output={app.selectedPreset.output}
                 onReset={app.reset}
                 onDownload={app.downloadPdf}
                 onPrint={app.openPdfForPrinting}
               />
             </div>
 
-            <PreviewPane conversion={app.conversion} />
+            <PreviewPane conversion={app.conversion} emptyLabel={`${formatOutputSize(app.selectedPreset.output)} PDF preview`} />
           </section>
 
           <footer className="app-footer">
@@ -104,6 +106,7 @@ export default function App() {
           onPresetNameChange={presetModal.updatePresetName}
           onFilenameHintsChange={presetModal.updateFilenameHints}
           onCropChange={presetModal.updateCrop}
+          onOutputChange={presetModal.updateOutput}
           onVisualCropChange={presetModal.setCrop}
           onToggleAspectLock={presetModal.toggleAspectLock}
           onSavePreset={presetModal.save}

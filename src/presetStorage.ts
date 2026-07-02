@@ -1,6 +1,7 @@
-import { LabelPreset } from "./pdf/labelCropper";
+import { LabelPreset, normalizeOutputSize } from "./pdf/labelCropper";
 
-const STORAGE_KEY = "label-cropper/custom-presets/v1";
+const STORAGE_KEY = "label-cropper/custom-presets/v2";
+const LEGACY_STORAGE_KEY = "label-cropper/custom-presets/v1";
 
 export function loadCustomLabelPresets(): LabelPreset[] {
   if (typeof window === "undefined") {
@@ -8,7 +9,7 @@ export function loadCustomLabelPresets(): LabelPreset[] {
   }
 
   try {
-    const rawValue = window.localStorage.getItem(STORAGE_KEY);
+    const rawValue = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!rawValue) {
       return [];
     }
@@ -42,6 +43,7 @@ function toLabelPreset(value: unknown): LabelPreset | null {
 
   const entry = value as Partial<LabelPreset>;
   const crop = entry.crop;
+  const output = normalizeOutputSize(entry.output);
   if (
     typeof entry.id !== "string" ||
     typeof entry.name !== "string" ||
@@ -66,5 +68,6 @@ function toLabelPreset(value: unknown): LabelPreset | null {
       width: crop.width,
       height: crop.height,
     },
+    output,
   };
 }

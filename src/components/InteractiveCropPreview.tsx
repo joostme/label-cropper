@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { CropPreset } from "../pdf/labelCropper";
+import { CropPreset, formatOutputSize, getOutputAspectRatio, OutputSizePreset } from "../pdf/labelCropper";
 import { usePdfPagePreview } from "../hooks/usePdfPagePreview";
 import { CropBoxHandle, cropPresetToDisplayRect, displayRectToCropPreset, moveDisplayRect, resizeDisplayRect } from "../presets/cropBoxMath";
 
 type InteractiveCropPreviewProps = {
   file: File | null;
   crop: CropPreset;
+  output: OutputSizePreset;
   aspectLockEnabled: boolean;
   onCropChange: (crop: CropPreset) => void;
 };
@@ -36,11 +37,13 @@ const handles: Array<{ key: Exclude<CropBoxHandle, "move">; label: string }> = [
   { key: "se", label: "Resize from bottom right" },
 ];
 
-export function InteractiveCropPreview({ file, crop, aspectLockEnabled, onCropChange }: InteractiveCropPreviewProps) {
+export function InteractiveCropPreview({ file, crop, output, aspectLockEnabled, onCropChange }: InteractiveCropPreviewProps) {
   const { preview, loading, error } = usePdfPagePreview(file);
   const frameRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<InteractionState | null>(null);
   const [displaySize, setDisplaySize] = useState<Size>({ width: 0, height: 0 });
+  const outputAspectRatio = useMemo(() => getOutputAspectRatio(output), [output]);
+  const outputLabel = useMemo(() => formatOutputSize(output), [output]);
 
   useEffect(() => {
     if (!frameRef.current) {
@@ -95,7 +98,15 @@ export function InteractiveCropPreview({ file, crop, aspectLockEnabled, onCropCh
       const nextRect =
         interaction.handle === "move"
           ? moveDisplayRect(interaction.startRect, deltaX, deltaY, displaySize)
-          : resizeDisplayRect(interaction.startRect, interaction.handle, deltaX, deltaY, displaySize, aspectLockEnabled);
+          : resizeDisplayRect(
+              interaction.startRect,
+              interaction.handle,
+              deltaX,
+              deltaY,
+              displaySize,
+              aspectLockEnabled,
+              outputAspectRatio,
+            );
 
       onCropChange(
         displayRectToCropPreset(
@@ -124,7 +135,7 @@ export function InteractiveCropPreview({ file, crop, aspectLockEnabled, onCropCh
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerUp);
     };
-  }, [aspectLockEnabled, displaySize, onCropChange, preview]);
+  }, [aspectLockEnabled, displaySize, onCropChange, outputAspectRatio, preview]);
 
   function beginInteraction(handle: CropBoxHandle, event: ReactPointerEvent<HTMLDivElement>) {
     if (!cropRect) {
@@ -171,7 +182,7 @@ export function InteractiveCropPreview({ file, crop, aspectLockEnabled, onCropCh
                 }}
                 onPointerDown={(event) => beginInteraction("move", event)}
               >
-                <div className="crop-box-label">{aspectLockEnabled ? "4 x 6 locked" : "Free crop"}</div>
+                <div className="crop-box-label">{aspectLockEnabled ? `${outputLabel} locked` : "Free crop"}</div>
                 {handles.map(({ key, label }) => (
                   <div
                     key={key}

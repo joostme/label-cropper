@@ -1,7 +1,7 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { CircleHelp, Lock, LockOpen } from "lucide-react";
-import { LabelPreset } from "../pdf/labelCropper";
-import { CropField } from "../presets/presetUtils";
+import { formatOutputSize, LabelPreset } from "../pdf/labelCropper";
+import { CropField, OutputField } from "../presets/presetUtils";
 
 type PresetEditorCardProps = {
   presetDraft: LabelPreset;
@@ -12,6 +12,7 @@ type PresetEditorCardProps = {
   onPresetNameChange: (name: string) => void;
   onFilenameHintsChange: (value: string) => void;
   onCropChange: (field: CropField, value: number) => void;
+  onOutputChange: (field: OutputField, value: number) => void;
   onToggleAspectLock: () => void;
   onSavePreset: () => void;
   onSecondaryAction?: () => void;
@@ -27,6 +28,11 @@ const cropFields: Array<{ field: CropField; label: string; min: number }> = [
   { field: "height", label: "Height", min: 1 },
 ];
 
+const outputFields: Array<{ field: OutputField; label: string; min: number }> = [
+  { field: "widthMm", label: "Width (mm)", min: 0.1 },
+  { field: "heightMm", label: "Height (mm)", min: 0.1 },
+];
+
 export function PresetEditorCard({
   presetDraft,
   presetHintValue,
@@ -36,6 +42,7 @@ export function PresetEditorCard({
   onPresetNameChange,
   onFilenameHintsChange,
   onCropChange,
+  onOutputChange,
   onToggleAspectLock,
   onSavePreset,
   onSecondaryAction,
@@ -82,13 +89,36 @@ export function PresetEditorCard({
         </label>
 
         <div className="field-wide preset-section-header">
+          <span className="preset-section-title">Output page size</span>
+        </div>
+
+        {outputFields.map(({ field, label, min }) => (
+          <label className="field" key={field}>
+            <span>{label}</span>
+            <input
+              type="number"
+              min={min}
+              step="0.1"
+              value={presetDraft.output[field]}
+              onChange={(event) => {
+                if (event.currentTarget.value === "") {
+                  return;
+                }
+
+                onOutputChange(field, Number(event.currentTarget.value));
+              }}
+            />
+          </label>
+        ))}
+
+        <div className="field-wide preset-section-header">
           <span className="preset-section-title">Crop dimensions</span>
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <button
                 type="button"
                 className={`aspect-lock-toggle ${aspectLockEnabled ? "is-active" : ""}`}
-                aria-label={aspectLockEnabled ? "Disable 4 by 6 aspect ratio lock" : "Enable 4 by 6 aspect ratio lock"}
+                aria-label={aspectLockEnabled ? `Disable ${formatOutputSize(presetDraft.output)} aspect ratio lock` : `Enable ${formatOutputSize(presetDraft.output)} aspect ratio lock`}
                 aria-pressed={aspectLockEnabled}
                 onClick={onToggleAspectLock}
               >
@@ -98,7 +128,7 @@ export function PresetEditorCard({
             <Tooltip.Portal>
               <Tooltip.Content className="tooltip-content" side="top" align="end" sideOffset={10}>
                 {aspectLockEnabled
-                  ? "Aspect ratio lock is on. Width and height stay aligned to 4 x 6, so changing one automatically updates the other."
+                  ? `Aspect ratio lock is on. Width and height stay aligned to ${formatOutputSize(presetDraft.output)}, so changing one automatically updates the other.`
                   : "Aspect ratio lock is off. Width and height can be edited independently."}
                 <Tooltip.Arrow className="tooltip-arrow" />
               </Tooltip.Content>

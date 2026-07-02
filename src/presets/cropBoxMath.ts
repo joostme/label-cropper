@@ -16,7 +16,6 @@ type Bounds = {
 
 type ViewportTransform = [number, number, number, number, number, number];
 
-const LABEL_ASPECT_RATIO = 4 / 6;
 const MIN_CROP_SIZE = 24;
 
 export function clampCropToBounds(crop: CropPreset): CropPreset {
@@ -98,6 +97,7 @@ export function resizeDisplayRect(
   deltaY: number,
   bounds: Bounds,
   aspectLockEnabled: boolean,
+  aspectRatio: number,
 ): CropRect {
   const left = rect.x;
   const top = rect.y;
@@ -134,6 +134,7 @@ export function resizeDisplayRect(
       rect,
       deltaX,
       deltaY,
+      aspectRatio,
     );
   }
 
@@ -152,6 +153,7 @@ function lockRectAspect(
   startRect: CropRect,
   deltaX: number,
   deltaY: number,
+  aspectRatio: number,
 ): CropRect {
   const anchorX = handle.includes("w") ? startRect.x + startRect.width : startRect.x;
   const anchorY = handle.includes("n") ? startRect.y + startRect.height : startRect.y;
@@ -161,9 +163,9 @@ function lockRectAspect(
   let height = rect.height;
 
   if (widthDriven) {
-    height = Math.max(MIN_CROP_SIZE, width / LABEL_ASPECT_RATIO);
+    height = Math.max(MIN_CROP_SIZE, width / aspectRatio);
   } else {
-    width = Math.max(MIN_CROP_SIZE, height * LABEL_ASPECT_RATIO);
+    width = Math.max(MIN_CROP_SIZE, height * aspectRatio);
   }
 
   const maxWidth = handle.includes("w") ? anchorX : bounds.width - anchorX;
@@ -171,12 +173,12 @@ function lockRectAspect(
 
   if (width > maxWidth) {
     width = maxWidth;
-    height = width / LABEL_ASPECT_RATIO;
+    height = width / aspectRatio;
   }
 
   if (height > maxHeight) {
     height = maxHeight;
-    width = height * LABEL_ASPECT_RATIO;
+    width = height * aspectRatio;
   }
 
   width = Math.max(MIN_CROP_SIZE, width);

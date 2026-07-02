@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import { useLabelConversion } from "../hooks/useLabelConversion";
-import { LabelPreset } from "../pdf/labelCropper";
-import { CropField } from "../presets/presetUtils";
+import { formatOutputSize, LabelPreset } from "../pdf/labelCropper";
+import { CropField, OutputField } from "../presets/presetUtils";
 import { InteractiveCropPreview } from "./InteractiveCropPreview";
 import { PresetEditorCard } from "./PresetEditorCard";
 import { PreviewPane } from "./PreviewPane";
@@ -23,6 +23,7 @@ type PresetManagerModalProps = {
   onPresetNameChange: (name: string) => void;
   onFilenameHintsChange: (value: string) => void;
   onCropChange: (field: CropField, value: number) => void;
+  onOutputChange: (field: OutputField, value: number) => void;
   onVisualCropChange: (crop: LabelPreset["crop"]) => void;
   onToggleAspectLock: () => void;
   onSavePreset: () => void;
@@ -45,6 +46,7 @@ export function PresetManagerModal({
   onPresetNameChange,
   onFilenameHintsChange,
   onCropChange,
+  onOutputChange,
   onVisualCropChange,
   onToggleAspectLock,
   onSavePreset,
@@ -85,7 +87,13 @@ export function PresetManagerModal({
               title={file ? "Replace Preview PDF" : "Upload Preview PDF"}
               subtitle={file ? file.name : "Drop a PDF here or choose one to preview this preset."}
             />
-            <InteractiveCropPreview file={file} crop={presetDraft.crop} aspectLockEnabled={aspectLockEnabled} onCropChange={onVisualCropChange} />
+            <InteractiveCropPreview
+              file={file}
+              crop={presetDraft.crop}
+              output={presetDraft.output}
+              aspectLockEnabled={aspectLockEnabled}
+              onCropChange={onVisualCropChange}
+            />
           </div>
           <div className="modal-side-column">
             <PresetEditorCard
@@ -97,6 +105,7 @@ export function PresetManagerModal({
               onPresetNameChange={onPresetNameChange}
               onFilenameHintsChange={onFilenameHintsChange}
               onCropChange={onCropChange}
+              onOutputChange={onOutputChange}
               onToggleAspectLock={onToggleAspectLock}
               onSavePreset={onSavePreset}
               onSecondaryAction={onClose}
@@ -107,7 +116,7 @@ export function PresetManagerModal({
             <PreviewPane
               conversion={draftConversion}
               title="Draft Output Preview"
-              emptyLabel="Upload a PDF to preview the draft output."
+              emptyLabel={file ? `${formatOutputSize(presetDraft.output)} PDF preview` : "Upload a PDF to preview the draft output."}
               compact
             />
           </div>

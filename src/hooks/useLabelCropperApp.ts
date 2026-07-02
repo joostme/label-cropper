@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   DEFAULT_LABEL_PRESET,
   findLabelPresetForFiles,
+  formatOutputSizeSlug,
   LabelPreset,
   LABEL_PRESETS,
   makePdfBlobUrl,
@@ -26,12 +27,14 @@ export function useLabelCropperApp() {
   const isCustomPresetSelected = customPresets.some((preset) => preset.id === selectedPresetId);
   const hasResult = Boolean(conversion.pdfBytes && conversion.pdfUrl);
   const outputName = useMemo(() => {
+    const sizeLabel = formatOutputSizeSlug(selectedPreset.output);
+
     if (files.length === 1) {
-      return files[0].name.replace(/\.pdf$/i, "-4x6.pdf");
+      return files[0].name.replace(/\.pdf$/i, `-${sizeLabel}.pdf`);
     }
 
-    return `${files.length}-labels-${new Date().toISOString().slice(0, 10)}-4x6.pdf`;
-  }, [files]);
+    return `${files.length}-labels-${new Date().toISOString().slice(0, 10)}-${sizeLabel}.pdf`;
+  }, [files, selectedPreset.output]);
   const firstFile = files[0] ?? null;
 
   function applyFiles(nextFiles: File[]) {

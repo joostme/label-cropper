@@ -1,9 +1,8 @@
-import { CropPreset, LabelPreset } from "../pdf/labelCropper";
+import { CropPreset, getOutputAspectRatio, LabelPreset, normalizeOutputSize } from "../pdf/labelCropper";
 
 export type CropField = keyof LabelPreset["crop"];
+export type OutputField = keyof LabelPreset["output"];
 export type AspectLockAnchor = "bestFit" | "width" | "height";
-
-const LABEL_ASPECT_RATIO = 4 / 6;
 
 export function clonePreset(preset: LabelPreset): LabelPreset {
   return {
@@ -11,6 +10,7 @@ export function clonePreset(preset: LabelPreset): LabelPreset {
     name: preset.name,
     filenameHints: preset.filenameHints ? [...preset.filenameHints] : undefined,
     crop: { ...preset.crop },
+    output: normalizeOutputSize(preset.output),
   };
 }
 
@@ -34,6 +34,8 @@ export function presetsMatch(left: LabelPreset, right: LabelPreset): boolean {
     left.crop.y === right.crop.y &&
     left.crop.width === right.crop.width &&
     left.crop.height === right.crop.height &&
+    left.output.widthMm === right.output.widthMm &&
+    left.output.heightMm === right.output.heightMm &&
     formatFilenameHints(left.filenameHints) === formatFilenameHints(right.filenameHints)
   );
 }
@@ -54,37 +56,43 @@ export function createPresetId(name: string, presets: LabelPreset[]): string {
   return `${baseId}-${suffix}`;
 }
 
-export function alignCropToLabelAspect(crop: CropPreset, anchor: AspectLockAnchor = "bestFit"): CropPreset {
+export function alignCropToOutputAspect(
+  crop: CropPreset,
+  output: LabelPreset["output"],
+  anchor: AspectLockAnchor = "bestFit",
+): CropPreset {
   if (crop.width <= 0 || crop.height <= 0) {
     return crop;
   }
 
+  const aspectRatio = getOutputAspectRatio(output);
+
   if (anchor === "width") {
     return {
       ...crop,
-      height: Math.max(1, Math.round(crop.width / LABEL_ASPECT_RATIO)),
+      height: Math.max(1, Math.round(crop.width / aspectRatio)),
     };
   }
 
   if (anchor === "height") {
     return {
       ...crop,
-      width: Math.max(1, Math.round(crop.height * LABEL_ASPECT_RATIO)),
+      width: Math.max(1, Math.round(crop.height * aspectRatio)),
     };
   }
 
-  const widthAlignedCrop = alignCropToLabelAspect(crop, "height");
-  const heightAlignedCrop = alignCropToLabelAspect(crop, "width");
+  const widthAlignedCrop = alignCropToOutputAspect(crop, output, "height");
+  const heightAlignedCrop = alignCropToOutputAspect(crop, output, "width");
   const widthChange = Math.abs(widthAlignedCrop.width - crop.width) / crop.width;
   const heightChange = Math.abs(heightAlignedCrop.height - crop.height) / crop.height;
 
   return widthChange <= heightChange ? widthAlignedCrop : heightAlignedCrop;
 }
 
-export function alignPresetToLabelAspect(preset: LabelPreset, anchor: AspectLockAnchor = "bestFit"): LabelPreset {
+export function alignPresetToOutputAspect(preset: LabelPreset, anchor: AspectLockAnchor = "bestFit"): LabelPreset {
   return {
     ...clonePreset(preset),
-    crop: alignCropToLabelAspect(preset.crop, anchor),
+    crop: alignCropToOutputAspect(preset.crop, preset.output, anchor),
   };
 }
 

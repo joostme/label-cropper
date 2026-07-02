@@ -7,11 +7,17 @@ export type CropPreset = {
   height: number;
 };
 
+export type OutputSizePreset = {
+  widthMm: number;
+  heightMm: number;
+};
+
 export type LabelPreset = {
   id: string;
   name: string;
   filenameHints?: string[];
   crop: CropPreset;
+  output: OutputSizePreset;
 };
 
 export type ConversionSummary = {
@@ -21,8 +27,11 @@ export type ConversionSummary = {
 };
 
 const POINTS_PER_INCH = 72;
-const LABEL_WIDTH = 4 * POINTS_PER_INCH;
-const LABEL_HEIGHT = 6 * POINTS_PER_INCH;
+const MILLIMETERS_PER_INCH = 25.4;
+export const DEFAULT_OUTPUT_SIZE: OutputSizePreset = {
+  widthMm: 101.6,
+  heightMm: 152.4,
+};
 export const NORMALIZED_PAGE_WIDTH = 842;
 export const NORMALIZED_PAGE_HEIGHT = 595;
 
@@ -37,6 +46,7 @@ export const LABEL_PRESETS: LabelPreset[] = [
       width: 367,
       height: 550,
     },
+    output: DEFAULT_OUTPUT_SIZE,
   },
 ];
 
@@ -65,6 +75,7 @@ type PageBox = {
 
 export async function convertLabels(files: File[], labelPreset: LabelPreset): Promise<ConversionSummary> {
   const outputPdf = await PDFDocument.create();
+  const outputPageSize = outputSizeToPoints(labelPreset.output);
   let pages = 0;
   let rotatedPages = 0;
 
@@ -76,14 +87,14 @@ export async function convertLabels(files: File[], labelPreset: LabelPreset): Pr
       const { crop, isPortrait } = getNormalizedCrop(inputPage, labelPreset.crop);
       const sourceBox = isPortrait ? normalizedLandscapeToPortraitBox(crop, inputPage) : cropToPageBox(crop);
       const embeddedPage = await outputPdf.embedPage(inputPage, sourceBox);
-      const outputPage = outputPdf.addPage([LABEL_WIDTH, LABEL_HEIGHT]);
+      const outputPage = outputPdf.addPage([outputPageSize.width, outputPageSize.height]);
 
       if (isPortrait) {
         outputPage.drawPage(embeddedPage, {
           x: 0,
-          y: LABEL_HEIGHT,
-          width: LABEL_HEIGHT,
-          height: LABEL_WIDTH,
+          y: outputPageSize.height,
+          width: outputPageSize.height,
+          height: outputPageSize.width,
           rotate: degrees(-90),
         });
         rotatedPages += 1;
@@ -91,8 +102,8 @@ export async function convertLabels(files: File[], labelPreset: LabelPreset): Pr
         outputPage.drawPage(embeddedPage, {
           x: 0,
           y: 0,
-          width: LABEL_WIDTH,
-          height: LABEL_HEIGHT,
+          width: outputPageSize.width,
+          height: outputPageSize.height,
         });
       }
 
@@ -206,4 +217,43 @@ export function makePdfBlobUrl(bytes: Uint8Array): string {
   const blobBytes = new Uint8Array(bytes.byteLength);
   blobBytes.set(bytes);
   return URL.createObjectURL(new Blob([blobBytes], { type: "application/pdf" }));
+}
+
+export function normalizeOutputSize(output?: Partial<OutputSizePreset>): OutputSizePreset {
+  return {
+    widthMm: normalizeOutputDimension(output?.widthMm, DEFAULT_OUTPUT_SIZE.widthMm),
+    heightMm: normalizeOutputDimension(output?.heightMm, DEFAULT_OUTPUT_SIZE.heightMm),
+  };
+}
+
+export function getOutputAspectRatio(output: OutputSizePreset): number {
+  return output.widthMm / output.heightMm;
+}
+
+export function formatOutputSize(output: OutputSizePreset): string {
+  return `${formatMillimeters(output.widthMm)} x ${formatMillimeters(output.heightMm)} mm`;
+}
+
+export function formatOutputSizeSlug(output: OutputSizePreset): string {
+  return `${formatMillimeters(output.widthMm)}x${formatMillimeters(output.heightMm)}mm`;
+}
+
+function outputSizeToPoints(output: OutputSizePreset) {
+  return {
+    width: millimetersToPoints(output.widthMm),
+    height: millimetersToPoints(output.heightMm),
+  };
+}
+
+function millimetersToPoints(millimeters: number): number {
+  return (millimeters / MILLIMETERS_PER_INCH) * POINTS_PER_INCH;
+}
+
+function normalizeOutputDimension(value: number | undefined, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function formatMillimeters(value: number): string {
+  const roundedValue = Math.round(value * 10) / 10;
+  return Number.isInteger(roundedValue) ? roundedValue.toFixed(0) : roundedValue.toFixed(1);
 }

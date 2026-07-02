@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
 import { LabelPreset } from "../pdf/labelCropper";
 import { clampCropToBounds } from "../presets/cropBoxMath";
-import { alignPresetToLabelAspect, clonePreset, CropField, formatFilenameHints, parseFilenameHints } from "../presets/presetUtils";
+import {
+  alignPresetToOutputAspect,
+  clonePreset,
+  CropField,
+  formatFilenameHints,
+  OutputField,
+  parseFilenameHints,
+} from "../presets/presetUtils";
 
 type PresetEditorMode = "create" | "duplicate" | "edit" | "edit-template";
 
@@ -15,14 +22,16 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
   const [isOpen, setOpen] = useState(false);
   const [mode, setMode] = useState<PresetEditorMode>("create");
   const [aspectLockEnabled, setAspectLockEnabled] = useState(true);
-  const [draft, setDraft] = useState<LabelPreset>(() => alignPresetToLabelAspect(selectedPreset));
+  const [draft, setDraft] = useState<LabelPreset>(() => alignPresetToOutputAspect(selectedPreset));
   const [sourcePresetId, setSourcePresetId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const canSave =
     draft.name.trim().length > 0 &&
     draft.crop.width > 0 &&
-    draft.crop.height > 0;
+    draft.crop.height > 0 &&
+    draft.output.widthMm > 0 &&
+    draft.output.heightMm > 0;
   const presetHintValue = formatFilenameHints(draft.filenameHints);
 
   const modalTitle = useMemo(() => {
@@ -40,7 +49,7 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
     openWithDraft(
       "create",
       {
-        ...alignPresetToLabelAspect(selectedPreset),
+        ...alignPresetToOutputAspect(selectedPreset),
         id: "",
         name: "",
       },
@@ -52,7 +61,7 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
     openWithDraft(
       "duplicate",
       {
-        ...alignPresetToLabelAspect(selectedPreset),
+        ...alignPresetToOutputAspect(selectedPreset),
         id: "",
         name: `${selectedPreset.name} Copy`,
       },
@@ -63,7 +72,7 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
   function openEdit() {
     openWithDraft(
       isCustomPresetSelected ? "edit" : "edit-template",
-      alignPresetToLabelAspect(selectedPreset),
+      alignPresetToOutputAspect(selectedPreset),
       isCustomPresetSelected ? selectedPreset.id : null,
     );
   }
@@ -107,8 +116,26 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
       };
 
       return aspectLockEnabled && (field === "width" || field === "height")
-        ? alignPresetToLabelAspect(nextDraft, field)
+        ? alignPresetToOutputAspect(nextDraft, field)
         : nextDraft;
+    });
+  }
+
+  function updateOutput(field: OutputField, value: number) {
+    if (!Number.isFinite(value) || value <= 0) {
+      return;
+    }
+
+    updateDraft((current) => {
+      const nextDraft = {
+        ...current,
+        output: {
+          ...current.output,
+          [field]: value,
+        },
+      };
+
+      return aspectLockEnabled ? alignPresetToOutputAspect(nextDraft) : nextDraft;
     });
   }
 
@@ -123,7 +150,7 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
     setAspectLockEnabled((current) => {
       const nextValue = !current;
       if (nextValue) {
-        setDraft((draftValue) => alignPresetToLabelAspect(draftValue));
+        setDraft((draftValue) => alignPresetToOutputAspect(draftValue));
       }
       return nextValue;
     });
@@ -139,6 +166,11 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
 
     if (draft.crop.width <= 0 || draft.crop.height <= 0) {
       setError("Width and height must be greater than zero.");
+      return;
+    }
+
+    if (draft.output.widthMm <= 0 || draft.output.heightMm <= 0) {
+      setError("Output width and height must be greater than zero.");
       return;
     }
 
@@ -170,6 +202,7 @@ export function usePresetEditorModal({ selectedPreset, isCustomPresetSelected, o
     updatePresetName,
     updateFilenameHints,
     updateCrop,
+    updateOutput,
     setCrop,
     toggleAspectLock,
     save,
