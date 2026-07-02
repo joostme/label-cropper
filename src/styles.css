@@ -400,6 +400,28 @@ button.field-help:focus-visible {
   font-weight: 700;
 }
 
+.unit-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.unit-toggle-button {
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.unit-toggle-button.is-active {
+  background: #253329;
+  border-color: #253329;
+  color: #fff;
+}
+
+button.secondary.unit-toggle-button.is-active:hover:not(:disabled) {
+  background: #1e2922;
+  border-color: #1e2922;
+}
+
 .preset-actions {
   display: grid;
   gap: 10px;

@@ -1,25 +1,39 @@
 import { Download, Printer, Trash2 } from "lucide-react";
 import { ConversionState } from "../hooks/useLabelConversion";
-import { formatOutputSize, OutputSizePreset } from "../pdf/labelCropper";
+import { formatOutputSize, OutputSizePreset, OutputUnit } from "../pdf/labelCropper";
+import { OutputUnitToggle } from "./OutputUnitToggle";
 
 type OutputPanelProps = {
   conversion: ConversionState;
   filesCount: number;
   hasResult: boolean;
   output: OutputSizePreset;
+  outputUnit: OutputUnit;
+  onOutputUnitChange: (unit: OutputUnit) => void;
   onReset: () => void;
   onDownload: () => void;
   onPrint: () => void;
 };
 
-export function OutputPanel({ conversion, filesCount, hasResult, output, onReset, onDownload, onPrint }: OutputPanelProps) {
+export function OutputPanel({
+  conversion,
+  filesCount,
+  hasResult,
+  output,
+  outputUnit,
+  onOutputUnitChange,
+  onReset,
+  onDownload,
+  onPrint,
+}: OutputPanelProps) {
   return (
     <>
       <div className="panel panel-compact">
         <div className="panel-header">
           <div className="panel-title">Output Format</div>
+          <OutputUnitToggle outputUnit={outputUnit} onChange={onOutputUnitChange} />
         </div>
-        <p className="panel-note panel-note-tight">{formatOutputSize(output)} PDF page</p>
+        <p className="panel-note panel-note-tight">{formatOutputSize(output, outputUnit)} PDF page</p>
       </div>
 
       <div className="actions">

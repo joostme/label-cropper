@@ -73,13 +73,15 @@ export default function App() {
                 filesCount={app.files.length}
                 hasResult={app.hasResult}
                 output={app.selectedPreset.output}
+                outputUnit={app.outputUnit}
+                onOutputUnitChange={app.updateOutputUnit}
                 onReset={app.reset}
                 onDownload={app.downloadPdf}
                 onPrint={app.openPdfForPrinting}
               />
             </div>
 
-            <PreviewPane conversion={app.conversion} emptyLabel={`${formatOutputSize(app.selectedPreset.output)} PDF preview`} />
+            <PreviewPane conversion={app.conversion} emptyLabel={`${formatOutputSize(app.selectedPreset.output, app.outputUnit)} PDF preview`} />
           </section>
 
           <footer className="app-footer">
@@ -100,6 +102,7 @@ export default function App() {
           canSavePreset={presetModal.canSave}
           aspectLockEnabled={presetModal.aspectLockEnabled}
           presetError={presetModal.error}
+          outputUnit={app.outputUnit}
           title={presetModal.modalTitle}
           primaryActionLabel={presetModal.primaryActionLabel}
           onClose={presetModal.close}
@@ -107,6 +110,7 @@ export default function App() {
           onFilenameHintsChange={presetModal.updateFilenameHints}
           onCropChange={presetModal.updateCrop}
           onOutputChange={presetModal.updateOutput}
+          onOutputUnitChange={app.updateOutputUnit}
           onVisualCropChange={presetModal.setCrop}
           onToggleAspectLock={presetModal.toggleAspectLock}
           onSavePreset={presetModal.save}

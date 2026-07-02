@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { CropPreset, formatOutputSize, getOutputAspectRatio, OutputSizePreset } from "../pdf/labelCropper";
+import { CropPreset, formatOutputSize, getOutputAspectRatio, OutputSizePreset, OutputUnit } from "../pdf/labelCropper";
 import { usePdfPagePreview } from "../hooks/usePdfPagePreview";
 import { CropBoxHandle, cropPresetToDisplayRect, displayRectToCropPreset, moveDisplayRect, resizeDisplayRect } from "../presets/cropBoxMath";
 
@@ -8,6 +8,7 @@ type InteractiveCropPreviewProps = {
   file: File | null;
   crop: CropPreset;
   output: OutputSizePreset;
+  outputUnit: OutputUnit;
   aspectLockEnabled: boolean;
   onCropChange: (crop: CropPreset) => void;
 };
@@ -37,13 +38,13 @@ const handles: Array<{ key: Exclude<CropBoxHandle, "move">; label: string }> = [
   { key: "se", label: "Resize from bottom right" },
 ];
 
-export function InteractiveCropPreview({ file, crop, output, aspectLockEnabled, onCropChange }: InteractiveCropPreviewProps) {
+export function InteractiveCropPreview({ file, crop, output, outputUnit, aspectLockEnabled, onCropChange }: InteractiveCropPreviewProps) {
   const { preview, loading, error } = usePdfPagePreview(file);
   const frameRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<InteractionState | null>(null);
   const [displaySize, setDisplaySize] = useState<Size>({ width: 0, height: 0 });
   const outputAspectRatio = useMemo(() => getOutputAspectRatio(output), [output]);
-  const outputLabel = useMemo(() => formatOutputSize(output), [output]);
+  const outputLabel = useMemo(() => formatOutputSize(output, outputUnit), [output, outputUnit]);
 
   useEffect(() => {
     if (!frameRef.current) {

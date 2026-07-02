@@ -12,6 +12,8 @@ export type OutputSizePreset = {
   heightMm: number;
 };
 
+export type OutputUnit = "mm" | "in";
+
 export type LabelPreset = {
   id: string;
   name: string;
@@ -230,8 +232,20 @@ export function getOutputAspectRatio(output: OutputSizePreset): number {
   return output.widthMm / output.heightMm;
 }
 
-export function formatOutputSize(output: OutputSizePreset): string {
-  return `${formatMillimeters(output.widthMm)} x ${formatMillimeters(output.heightMm)} mm`;
+export function formatOutputSize(output: OutputSizePreset, unit: OutputUnit = "mm"): string {
+  return `${formatOutputDimension(output.widthMm, unit)} x ${formatOutputDimension(output.heightMm, unit)} ${unit}`;
+}
+
+export function formatOutputDimension(millimeters: number, unit: OutputUnit = "mm"): string {
+  return formatOutputUnitValue(convertMillimetersToOutputUnit(millimeters, unit), unit);
+}
+
+export function convertMillimetersToOutputUnit(millimeters: number, unit: OutputUnit): number {
+  return unit === "in" ? millimeters / MILLIMETERS_PER_INCH : millimeters;
+}
+
+export function convertOutputUnitToMillimeters(value: number, unit: OutputUnit): number {
+  return unit === "in" ? value * MILLIMETERS_PER_INCH : value;
 }
 
 export function formatOutputSizeSlug(output: OutputSizePreset): string {
@@ -254,6 +268,16 @@ function normalizeOutputDimension(value: number | undefined, fallback: number): 
 }
 
 function formatMillimeters(value: number): string {
-  const roundedValue = Math.round(value * 10) / 10;
-  return Number.isInteger(roundedValue) ? roundedValue.toFixed(0) : roundedValue.toFixed(1);
+  return formatOutputUnitValue(value, "mm");
+}
+
+function formatOutputUnitValue(value: number, unit: OutputUnit): string {
+  const digits = unit === "in" ? 2 : 1;
+  const roundedValue = Number(value.toFixed(digits));
+
+  return unit === "in" ? formatInchesValue(roundedValue) : roundedValue.toString();
+}
+
+function formatInchesValue(value: number): string {
+  return Number.isInteger(value) ? value.toFixed(0) : value.toString();
 }

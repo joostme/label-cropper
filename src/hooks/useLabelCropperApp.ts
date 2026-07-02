@@ -6,16 +6,20 @@ import {
   LabelPreset,
   LABEL_PRESETS,
   makePdfBlobUrl,
+  OutputUnit,
 } from "../pdf/labelCropper";
 import { useLabelConversion } from "./useLabelConversion";
 import { loadCustomLabelPresets, saveCustomLabelPresets } from "../presetStorage";
 import { clonePreset, createPresetId } from "../presets/presetUtils";
+
+const OUTPUT_UNIT_STORAGE_KEY = "label-cropper/output-unit/v1";
 
 export function useLabelCropperApp() {
   const [files, setFiles] = useState<File[]>([]);
   const [fileInputResetKey, setFileInputResetKey] = useState(0);
   const [customPresets, setCustomPresets] = useState<LabelPreset[]>(() => loadCustomLabelPresets());
   const [selectedPresetId, setSelectedPresetId] = useState(DEFAULT_LABEL_PRESET.id);
+  const [outputUnit, setOutputUnit] = useState<OutputUnit>(() => loadOutputUnitPreference());
 
   const availablePresets = useMemo(() => [...LABEL_PRESETS, ...customPresets], [customPresets]);
   const presetsForDetection = useMemo(() => [...customPresets, ...LABEL_PRESETS], [customPresets]);
@@ -45,6 +49,14 @@ export function useLabelCropperApp() {
 
   function selectPreset(presetId: string) {
     setSelectedPresetId(presetId);
+  }
+
+  function updateOutputUnit(nextUnit: OutputUnit) {
+    setOutputUnit(nextUnit);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(OUTPUT_UNIT_STORAGE_KEY, nextUnit);
+    }
   }
 
   function savePresetDefinition(preset: LabelPreset, existingPresetId?: string) {
@@ -123,14 +135,25 @@ export function useLabelCropperApp() {
     availablePresets,
     selectedPresetId,
     selectedPreset,
+    outputUnit,
     isCustomPresetSelected,
     hasResult,
     applyFiles,
     selectPreset,
+    updateOutputUnit,
     savePresetDefinition,
     deleteSelectedPreset,
     downloadPdf,
     openPdfForPrinting,
     reset,
   };
+}
+
+function loadOutputUnitPreference(): OutputUnit {
+  if (typeof window === "undefined") {
+    return "in";
+  }
+
+  const rawValue = window.localStorage.getItem(OUTPUT_UNIT_STORAGE_KEY);
+  return rawValue === "mm" || rawValue === "in" ? rawValue : "in";
 }

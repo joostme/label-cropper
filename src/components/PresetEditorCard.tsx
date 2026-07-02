@@ -1,7 +1,14 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { CircleHelp, Lock, LockOpen } from "lucide-react";
-import { formatOutputSize, LabelPreset } from "../pdf/labelCropper";
+import {
+  convertMillimetersToOutputUnit,
+  convertOutputUnitToMillimeters,
+  formatOutputSize,
+  LabelPreset,
+  OutputUnit,
+} from "../pdf/labelCropper";
 import { CropField, OutputField } from "../presets/presetUtils";
+import { OutputUnitToggle } from "./OutputUnitToggle";
 
 type PresetEditorCardProps = {
   presetDraft: LabelPreset;
@@ -9,10 +16,12 @@ type PresetEditorCardProps = {
   canSavePreset: boolean;
   aspectLockEnabled: boolean;
   presetError: string | null;
+  outputUnit: OutputUnit;
   onPresetNameChange: (name: string) => void;
   onFilenameHintsChange: (value: string) => void;
   onCropChange: (field: CropField, value: number) => void;
   onOutputChange: (field: OutputField, value: number) => void;
+  onOutputUnitChange: (unit: OutputUnit) => void;
   onToggleAspectLock: () => void;
   onSavePreset: () => void;
   onSecondaryAction?: () => void;
@@ -28,9 +37,9 @@ const cropFields: Array<{ field: CropField; label: string; min: number }> = [
   { field: "height", label: "Height", min: 1 },
 ];
 
-const outputFields: Array<{ field: OutputField; label: string; min: number }> = [
-  { field: "widthMm", label: "Width (mm)", min: 0.1 },
-  { field: "heightMm", label: "Height (mm)", min: 0.1 },
+const outputFields: Array<{ field: OutputField; label: string }> = [
+  { field: "widthMm", label: "Width" },
+  { field: "heightMm", label: "Height" },
 ];
 
 export function PresetEditorCard({
@@ -39,10 +48,12 @@ export function PresetEditorCard({
   canSavePreset,
   aspectLockEnabled,
   presetError,
+  outputUnit,
   onPresetNameChange,
   onFilenameHintsChange,
   onCropChange,
   onOutputChange,
+  onOutputUnitChange,
   onToggleAspectLock,
   onSavePreset,
   onSecondaryAction,
@@ -50,6 +61,8 @@ export function PresetEditorCard({
   primaryActionLabel = "Save preset",
   secondaryActionLabel = "Cancel",
 }: PresetEditorCardProps) {
+  const outputInputDigits = outputUnit === "in" ? 2 : 1;
+
   return (
     <div className="panel panel-editor">
       <div className="panel-header">
@@ -90,22 +103,25 @@ export function PresetEditorCard({
 
         <div className="field-wide preset-section-header">
           <span className="preset-section-title">Output page size</span>
+          <OutputUnitToggle outputUnit={outputUnit} onChange={onOutputUnitChange} />
         </div>
 
-        {outputFields.map(({ field, label, min }) => (
+        {outputFields.map(({ field, label }) => (
           <label className="field" key={field}>
-            <span>{label}</span>
+            <span>
+              {label} ({outputUnit})
+            </span>
             <input
               type="number"
-              min={min}
-              step="0.1"
-              value={presetDraft.output[field]}
+              min={outputUnit === "in" ? 0.01 : 0.1}
+              step={outputUnit === "in" ? "0.01" : "0.1"}
+              value={Number(convertMillimetersToOutputUnit(presetDraft.output[field], outputUnit).toFixed(outputInputDigits))}
               onChange={(event) => {
                 if (event.currentTarget.value === "") {
                   return;
                 }
 
-                onOutputChange(field, Number(event.currentTarget.value));
+                onOutputChange(field, convertOutputUnitToMillimeters(Number(event.currentTarget.value), outputUnit));
               }}
             />
           </label>
@@ -118,7 +134,11 @@ export function PresetEditorCard({
               <button
                 type="button"
                 className={`aspect-lock-toggle ${aspectLockEnabled ? "is-active" : ""}`}
-                aria-label={aspectLockEnabled ? `Disable ${formatOutputSize(presetDraft.output)} aspect ratio lock` : `Enable ${formatOutputSize(presetDraft.output)} aspect ratio lock`}
+                aria-label={
+                  aspectLockEnabled
+                    ? `Disable ${formatOutputSize(presetDraft.output, outputUnit)} aspect ratio lock`
+                    : `Enable ${formatOutputSize(presetDraft.output, outputUnit)} aspect ratio lock`
+                }
                 aria-pressed={aspectLockEnabled}
                 onClick={onToggleAspectLock}
               >
@@ -128,7 +148,7 @@ export function PresetEditorCard({
             <Tooltip.Portal>
               <Tooltip.Content className="tooltip-content" side="top" align="end" sideOffset={10}>
                 {aspectLockEnabled
-                  ? `Aspect ratio lock is on. Width and height stay aligned to ${formatOutputSize(presetDraft.output)}, so changing one automatically updates the other.`
+                  ? `Aspect ratio lock is on. Width and height stay aligned to ${formatOutputSize(presetDraft.output, outputUnit)}, so changing one automatically updates the other.`
                   : "Aspect ratio lock is off. Width and height can be edited independently."}
                 <Tooltip.Arrow className="tooltip-arrow" />
               </Tooltip.Content>
