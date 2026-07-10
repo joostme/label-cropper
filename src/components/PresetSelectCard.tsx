@@ -27,11 +27,12 @@ export function PresetSelectCard({
       <div className="panel-header">
         <div className="panel-title">
           <ListFilter aria-hidden="true" size={18} />
-          Preset Selection
+          Preset Library
         </div>
+        <p className="panel-note panel-note-tight">Choose the preset you want to edit or apply across all pages, then override individual pages below when needed.</p>
       </div>
       <label className="preset-select">
-        <span>Available presets</span>
+        <span>Current preset</span>
         <select value={selectedPresetId} onChange={(event) => onSelectPreset(event.currentTarget.value)}>
           {LABEL_PRESETS.map((preset) => (
             <option key={preset.id} value={preset.id}>

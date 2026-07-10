@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent } from "react";
 import { GitFork, ScanLine } from "lucide-react";
 import { formatOutputSize } from "./pdf/labelCropper";
 import { OutputPanel } from "./components/OutputPanel";
+import { PageAssignmentsCard } from "./components/PageAssignmentsCard";
 import { PresetManagerModal } from "./components/PresetManagerModal";
 import { PresetSelectCard } from "./components/PresetSelectCard";
 import { PreviewPane } from "./components/PreviewPane";
@@ -67,12 +68,20 @@ export default function App() {
                   }
                 }}
               />
+              <PageAssignmentsCard
+                pages={app.assignedPages}
+                customPresets={app.customPresets}
+                loading={app.pageManifestBusy}
+                error={app.pageManifestError}
+                onPagePresetChange={app.updatePagePreset}
+                onApplySelectedPresetToAll={app.applySelectedPresetToAllPages}
+              />
               <UploadedFilesCard files={app.files} />
               <OutputPanel
                 conversion={app.conversion}
                 filesCount={app.files.length}
                 hasResult={app.hasResult}
-                output={app.selectedPreset.output}
+                output={app.sharedOutputSize}
                 outputUnit={app.outputUnit}
                 onOutputUnitChange={app.updateOutputUnit}
                 onReset={app.reset}
@@ -81,7 +90,10 @@ export default function App() {
               />
             </div>
 
-            <PreviewPane conversion={app.conversion} emptyLabel={`${formatOutputSize(app.selectedPreset.output, app.outputUnit)} PDF preview`} />
+            <PreviewPane
+              conversion={app.conversion}
+              emptyLabel={app.sharedOutputSize ? `${formatOutputSize(app.sharedOutputSize, app.outputUnit)} PDF preview` : "Assign matching output sizes to preview the PDF"}
+            />
           </section>
 
           <footer className="app-footer">

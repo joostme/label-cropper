@@ -276,8 +276,48 @@ h1 {
   margin-top: 14px;
 }
 
+.page-assignment-toolbar {
+  margin-bottom: 12px;
+}
+
+.page-assignment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.page-assignment-row {
+  align-items: center;
+  background: #f6f8f6;
+  border: 1px solid #d7dfda;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 12px;
+}
+
+.page-assignment-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.page-assignment-copy strong {
+  color: #253329;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-assignment-copy span {
+  color: #607066;
+  font-size: 0.88rem;
+}
+
 .field input,
-.preset-select select {
+.preset-select select,
+.page-assignment-row select {
   appearance: none;
   background: #fff;
   border: 1px solid #b8c4bc;
@@ -288,7 +328,8 @@ h1 {
   width: 100%;
 }
 
-.preset-select select {
+.preset-select select,
+.page-assignment-row select {
   background:
     linear-gradient(45deg, transparent 50%, #516459 50%) right 16px center / 7px 7px no-repeat,
     linear-gradient(135deg, #516459 50%, transparent 50%) right 11px center / 7px 7px no-repeat,
@@ -297,7 +338,8 @@ h1 {
 }
 
 .field input:focus,
-.preset-select select:focus {
+.preset-select select:focus,
+.page-assignment-row select:focus {
   border-color: #b80f22;
   outline: 3px solid #f1d1d5;
 }

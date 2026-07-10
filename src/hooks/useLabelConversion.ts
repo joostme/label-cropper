@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { convertLabels, LabelPreset, makePdfBlobUrl } from "../pdf/labelCropper";
+import { convertLabels, convertLabelsWithPreset, LabelPreset, makePdfBlobUrl, PdfPageAssignment } from "../pdf/labelCropper";
 
 export type ConversionState = {
   pdfUrl: string | null;
@@ -19,9 +19,28 @@ const initialConversionState: ConversionState = {
   error: null,
 };
 
-export function useLabelConversion(files: File[], preset: LabelPreset) {
+const EMPTY_PAGE_ASSIGNMENTS: PdfPageAssignment[] = [];
+const EMPTY_PRESETS: LabelPreset[] = [];
+
+export function useLabelConversion(
+  files: File[],
+  presetOrPageAssignments: LabelPreset | PdfPageAssignment[],
+  presetsOrReady?: LabelPreset[] | boolean,
+  readyOrValidationError?: boolean | string | null,
+  validationError: string | null = null,
+) {
   const conversionRequestRef = useRef(0);
   const [conversion, setConversion] = useState<ConversionState>(initialConversionState);
+  const isAssignedMode = Array.isArray(presetOrPageAssignments);
+  const pageAssignments = isAssignedMode ? presetOrPageAssignments : EMPTY_PAGE_ASSIGNMENTS;
+  const presets = isAssignedMode && Array.isArray(presetsOrReady) ? presetsOrReady : EMPTY_PRESETS;
+  const ready = isAssignedMode ? Boolean(readyOrValidationError) : typeof presetsOrReady === "boolean" ? presetsOrReady : true;
+  const resolvedValidationError =
+    isAssignedMode && typeof validationError === "string"
+      ? validationError
+      : !isAssignedMode && typeof readyOrValidationError === "string"
+        ? readyOrValidationError
+        : null;
 
   useEffect(() => {
     return () => {
@@ -40,12 +59,35 @@ export function useLabelConversion(files: File[], preset: LabelPreset) {
       return;
     }
 
+    if (resolvedValidationError) {
+      setConversion({
+        ...initialConversionState,
+        error: resolvedValidationError,
+      });
+      return;
+    }
+
+    if (!ready) {
+      setConversion((current) => ({
+        ...current,
+        pdfBytes: null,
+        pdfUrl: null,
+        pages: 0,
+        rotatedPages: 0,
+        busy: true,
+        error: null,
+      }));
+      return;
+    }
+
     setConversion((current) => ({ ...current, busy: true, error: null }));
 
     const timeoutId = window.setTimeout(() => {
       void (async () => {
         try {
-          const result = await convertLabels(files, preset);
+          const result = isAssignedMode
+            ? await convertLabels(files, pageAssignments, presets)
+            : await convertLabelsWithPreset(files, presetOrPageAssignments);
           if (conversionRequestRef.current !== requestId) {
             return;
           }
@@ -75,7 +117,7 @@ export function useLabelConversion(files: File[], preset: LabelPreset) {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [files, preset]);
+  }, [files, isAssignedMode, pageAssignments, presetOrPageAssignments, presets, ready, resolvedValidationError]);
 
   return conversion;
 }

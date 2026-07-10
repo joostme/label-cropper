@@ -22,6 +22,12 @@ export type LabelPreset = {
   output: OutputSizePreset;
 };
 
+export type PdfPageAssignment = {
+  fileIndex: number;
+  pageIndex: number;
+  presetId: string;
+};
+
 export type ConversionSummary = {
   pages: number;
   rotatedPages: number;
@@ -75,7 +81,78 @@ type PageBox = {
   top: number;
 };
 
-export async function convertLabels(files: File[], labelPreset: LabelPreset): Promise<ConversionSummary> {
+export async function convertLabels(
+  files: File[],
+  pageAssignments: PdfPageAssignment[],
+  presets: LabelPreset[],
+): Promise<ConversionSummary> {
+  const outputPdf = await PDFDocument.create();
+  const presetLookup = new Map(presets.map((preset) => [preset.id, preset]));
+  const assignmentLookup = new Map(pageAssignments.map((assignment) => [getPdfPageAssignmentKey(assignment.fileIndex, assignment.pageIndex), assignment]));
+  let outputPageSize: ReturnType<typeof outputSizeToPoints> | null = null;
+  let sharedOutput: OutputSizePreset | null = null;
+  let pages = 0;
+  let rotatedPages = 0;
+
+  for (const [fileIndex, file] of files.entries()) {
+    const bytes = await file.arrayBuffer();
+    const inputPdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
+
+    for (const [pageIndex, inputPage] of inputPdf.getPages().entries()) {
+      const assignment = assignmentLookup.get(getPdfPageAssignmentKey(fileIndex, pageIndex));
+
+      if (!assignment) {
+        throw new Error(`Missing a preset assignment for ${file.name}, page ${pageIndex + 1}.`);
+      }
+
+      const labelPreset = presetLookup.get(assignment.presetId);
+
+      if (!labelPreset) {
+        throw new Error(`Preset "${assignment.presetId}" is no longer available for ${file.name}, page ${pageIndex + 1}.`);
+      }
+
+      if (!sharedOutput) {
+        sharedOutput = normalizeOutputSize(labelPreset.output);
+        outputPageSize = outputSizeToPoints(sharedOutput);
+      } else if (!outputSizesMatch(sharedOutput, labelPreset.output)) {
+        throw new Error("Assigned presets use different output page sizes. Choose presets with the same output size before exporting.");
+      }
+
+      const { crop, isPortrait } = getNormalizedCrop(inputPage, labelPreset.crop);
+      const sourceBox = isPortrait ? normalizedLandscapeToPortraitBox(crop, inputPage) : cropToPageBox(crop);
+      const embeddedPage = await outputPdf.embedPage(inputPage, sourceBox);
+      const outputPage = outputPdf.addPage([outputPageSize.width, outputPageSize.height]);
+
+      if (isPortrait) {
+        outputPage.drawPage(embeddedPage, {
+          x: 0,
+          y: outputPageSize.height,
+          width: outputPageSize.height,
+          height: outputPageSize.width,
+          rotate: degrees(-90),
+        });
+        rotatedPages += 1;
+      } else {
+        outputPage.drawPage(embeddedPage, {
+          x: 0,
+          y: 0,
+          width: outputPageSize.width,
+          height: outputPageSize.height,
+        });
+      }
+
+      pages += 1;
+    }
+  }
+
+  return {
+    pages,
+    rotatedPages,
+    outputBytes: await outputPdf.save(),
+  };
+}
+
+export async function convertLabelsWithPreset(files: File[], labelPreset: LabelPreset): Promise<ConversionSummary> {
   const outputPdf = await PDFDocument.create();
   const outputPageSize = outputSizeToPoints(labelPreset.output);
   let pages = 0;
@@ -226,6 +303,14 @@ export function normalizeOutputSize(output?: Partial<OutputSizePreset>): OutputS
     widthMm: normalizeOutputDimension(output?.widthMm, DEFAULT_OUTPUT_SIZE.widthMm),
     heightMm: normalizeOutputDimension(output?.heightMm, DEFAULT_OUTPUT_SIZE.heightMm),
   };
+}
+
+export function outputSizesMatch(left: OutputSizePreset, right: OutputSizePreset): boolean {
+  return Math.abs(left.widthMm - right.widthMm) < 0.01 && Math.abs(left.heightMm - right.heightMm) < 0.01;
+}
+
+export function getPdfPageAssignmentKey(fileIndex: number, pageIndex: number): string {
+  return `${fileIndex}:${pageIndex}`;
 }
 
 export function getOutputAspectRatio(output: OutputSizePreset): number {

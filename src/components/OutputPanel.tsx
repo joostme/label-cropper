@@ -7,7 +7,7 @@ type OutputPanelProps = {
   conversion: ConversionState;
   filesCount: number;
   hasResult: boolean;
-  output: OutputSizePreset;
+  output: OutputSizePreset | null;
   outputUnit: OutputUnit;
   onOutputUnitChange: (unit: OutputUnit) => void;
   onReset: () => void;
@@ -30,10 +30,12 @@ export function OutputPanel({
     <>
       <div className="panel panel-compact">
         <div className="panel-header">
-          <div className="panel-title">Output Format</div>
+        <div className="panel-title">Output Format</div>
           <OutputUnitToggle outputUnit={outputUnit} onChange={onOutputUnitChange} />
         </div>
-        <p className="panel-note panel-note-tight">{formatOutputSize(output, outputUnit)} PDF page</p>
+        <p className="panel-note panel-note-tight">
+          {output ? `${formatOutputSize(output, outputUnit)} PDF page` : "Resolve mixed output sizes before exporting"}
+        </p>
       </div>
 
       <div className="actions">
